@@ -40,8 +40,8 @@ def scrape_category_products(
         
         save_result_to_excel(products_data, output_file)
         
-    except Exception:
-        pass
+    except Exception as e:
+        print(f"Error during scraping: {e}")
     finally:
         try:
             driver.quit()

@@ -32,7 +32,8 @@ def navigate_to_page(driver: WebDriver, page_url: str, delay: float = PAGE_LOAD_
         driver.get(page_url)
         time.sleep(delay)
         return True
-    except Exception:
+    except Exception as e:
+        print(f"Navigation failed for {page_url}: {e}")
         time.sleep(PAGE_ERROR_WAIT)
         return False
 

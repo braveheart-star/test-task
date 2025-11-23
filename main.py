@@ -13,5 +13,5 @@ if __name__ == '__main__':
         category_url,
         output_file='bol_products.xlsx',
         start_page=1,
-        max_pages=2
+        max_pages=None  # None = collect all pages, or set to a number to limit pages
     )
