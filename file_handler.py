@@ -2,25 +2,37 @@
 Excel file operations for saving and updating product data.
 """
 
+from typing import List, Dict, Any
 import pandas as pd
+
 from browser import create_driver, navigate_to_page, retry_extraction
 from extractors import get_product_ean
+from config import (
+    COL_PRODUCT_URL,
+    COL_EAN,
+    COL_PRICE,
+    DEFAULT_OUTPUT_FILE
+)
 
 
-def save_result_to_excel(products_data, output_file='bol_products.xlsx'):
+def save_result_to_excel(products_data: List[Dict[str, Any]], output_file: str = DEFAULT_OUTPUT_FILE) -> None:
     """Save products data to Excel file.
     
     Args:
         products_data: List of dictionaries with keys 'Product URL', 'EAN', 'Price'
         output_file: Name of the Excel file to save results
     """
+    if not products_data:
+        print("No products to save.")
+        return
+    
     df = pd.DataFrame(products_data)
-    df.to_excel(output_file, index=False)
+    df.to_excel(output_file, index=False, engine='openpyxl')
     print(f"Results saved to: {output_file}")
     print(f"Total products: {len(products_data)}")
 
 
-def update_missing_ean_codes(excel_file='bol_products.xlsx'):
+def update_missing_ean_codes(excel_file: str = DEFAULT_OUTPUT_FILE) -> None:
     """Read Excel file, find URLs with missing EAN codes, test them, and update the file.
     
     Args:
@@ -32,10 +44,14 @@ def update_missing_ean_codes(excel_file='bol_products.xlsx'):
         print(f"Loaded {len(df)} products from {excel_file}")
         
         # Ensure EAN column is string type to avoid dtype warnings
-        df['EAN'] = df['EAN'].astype(str).replace('nan', '').replace('None', '')
+        df[COL_EAN] = df[COL_EAN].astype(str).replace('nan', '').replace('None', '')
         
-        # Find rows with missing EAN codes (empty string or NaN)
-        missing_ean_mask = (df['EAN'].isna()) | (df['EAN'] == '') | (df['EAN'].astype(str).str.strip() == '')
+        # Find rows with missing EAN codes
+        missing_ean_mask = (
+            df[COL_EAN].isna() |
+            (df[COL_EAN] == '') |
+            (df[COL_EAN].astype(str).str.strip() == '')
+        )
         missing_ean_df = df[missing_ean_mask].copy()
         
         if len(missing_ean_df) == 0:
@@ -47,12 +63,11 @@ def update_missing_ean_codes(excel_file='bol_products.xlsx'):
         
         # Initialize browser
         driver, wait = create_driver()
-        
         updated_count = 0
         
         try:
             for idx, row in missing_ean_df.iterrows():
-                product_url = row['Product URL']
+                product_url = row[COL_PRODUCT_URL]
                 print(f"\n[{updated_count + 1}/{len(missing_ean_df)}] Testing: {product_url}")
                 
                 try:
@@ -62,8 +77,7 @@ def update_missing_ean_codes(excel_file='bol_products.xlsx'):
                     ean = retry_extraction(get_product_ean, driver, wait)
                     
                     if ean:
-                        # Update the DataFrame
-                        df.at[idx, 'EAN'] = ean
+                        df.at[idx, COL_EAN] = ean
                         updated_count += 1
                         print(f"  [SUCCESS] EAN: {ean}")
                     else:
@@ -80,7 +94,7 @@ def update_missing_ean_codes(excel_file='bol_products.xlsx'):
         
         # Save updated DataFrame back to Excel
         if updated_count > 0:
-            df.to_excel(excel_file, index=False)
+            df.to_excel(excel_file, index=False, engine='openpyxl')
             print(f"\n{'=' * 60}")
             print(f"Updated {updated_count} EAN codes in {excel_file}")
             print(f"{'=' * 60}")

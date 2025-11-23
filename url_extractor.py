@@ -2,51 +2,47 @@
 URL extraction functions for product and category pages.
 """
 
+from typing import List, Optional
+from selenium.webdriver.remote.webdriver import WebDriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.support.ui import WebDriverWait
 from urllib.parse import urljoin
-from config import BOL_BASE_URL, PRODUCT_URL_PATH, CATEGORY_URL_PATH
+
+from config import (
+    BOL_BASE_URL,
+    PRODUCT_URL_PATH,
+    CATEGORY_URL_PATH,
+    SELECTOR_PAGINATION,
+    SELECTOR_PRODUCT_LINK
+)
+from browser import navigate_to_page
 
 
-def extract_all_page_urls_from_pagination(driver):
-    """Extract all page URLs from pagination by finding max page number from last li element.
+def extract_all_page_urls_from_pagination(driver: WebDriver) -> List[str]:
+    """Extract all page URLs from pagination by finding max page number.
     
     Since pagination uses ellipsis (...) to hide some pages, we find the maximum
-    page number from the last <li> element that contains an <a> tag and generate all page URLs manually.
+    page number from the last <li> element that contains an <a> tag and generate
+    all page URLs manually.
+    
+    Args:
+        driver: Selenium WebDriver instance
+    
+    Returns:
+        List of page URLs
     """
     page_urls = []
     try:
-        # Get current page URL to extract base URL
         current_url = driver.current_url
         base_url = current_url.split('?')[0]  # Remove query parameters
         
-        # Find pagination div
-        pagination_div = driver.find_element(By.CSS_SELECTOR, 'div[data-testid="pagination"]')
-        # Find ul element inside pagination
-        ul_element = pagination_div.find_element(By.TAG_NAME, 'ul')
-        # Find all li elements
-        li_elements = ul_element.find_elements(By.TAG_NAME, 'li')
-        
-        max_page = 1  # Default to page 1
-        
-        # Find the last li element that contains an <a> tag with href containing ?page=
-        # Iterate in reverse to find the maximum page number quickly
-        for li in reversed(li_elements):
-            try:
-                link = li.find_element(By.TAG_NAME, 'a')
-                href = link.get_attribute('href')
-                if href and '?page=' in href:
-                    # Extract page number from URL like "?page=8"
-                    page_num_str = href.split('?page=')[1].split('&')[0]
-                    max_page = int(page_num_str)
-                    break  # Found the last page link, exit loop
-            except Exception:
-                continue
+        # Find pagination and extract max page number
+        max_page = _get_max_page_number(driver)
         
         # Generate URLs for all pages from 1 to max_page
         page_urls.append(base_url)  # Page 1 is the base URL without ?page= parameter
-        for page_num in range(2, max_page + 1):
-            page_urls.append(f"{base_url}?page={page_num}")
+        page_urls.extend(f"{base_url}?page={num}" for num in range(2, max_page + 1))
         
     except Exception as e:
         print(f"Error extracting pagination: {e}")
@@ -62,8 +58,40 @@ def extract_all_page_urls_from_pagination(driver):
     return page_urls
 
 
-def extract_product_urls(driver, wait, page_url):
-    """Extract product URLs from a single page/link.
+def _get_max_page_number(driver: WebDriver) -> int:
+    """Extract maximum page number from pagination.
+    
+    Args:
+        driver: Selenium WebDriver instance
+    
+    Returns:
+        Maximum page number (default: 1)
+    """
+    try:
+        pagination_div = driver.find_element(By.CSS_SELECTOR, SELECTOR_PAGINATION)
+        ul_element = pagination_div.find_element(By.TAG_NAME, 'ul')
+        li_elements = ul_element.find_elements(By.TAG_NAME, 'li')
+        
+        # Find the last li element that contains an <a> tag with href containing ?page=
+        # Iterate in reverse to find the maximum page number quickly
+        for li in reversed(li_elements):
+            try:
+                link = li.find_element(By.TAG_NAME, 'a')
+                href = link.get_attribute('href')
+                if href and '?page=' in href:
+                    # Extract page number from URL like "?page=8"
+                    page_num_str = href.split('?page=')[1].split('&')[0]
+                    return int(page_num_str)
+            except Exception:
+                continue
+    except Exception:
+        pass
+    
+    return 1  # Default to page 1
+
+
+def extract_product_urls(driver: WebDriver, wait: WebDriverWait, page_url: str) -> List[str]:
+    """Extract product URLs from a single page.
     
     Args:
         driver: Selenium WebDriver instance
@@ -73,15 +101,16 @@ def extract_product_urls(driver, wait, page_url):
     Returns:
         List of product URLs found on the page
     """
-    product_urls = []
-    
     try:
-        driver.get(page_url)
-        product_link_selector = f'a[href*="{PRODUCT_URL_PATH}"]'
-        wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, product_link_selector)))
+        # Use consistent navigation function
+        if not navigate_to_page(driver, page_url):
+            return []
+        
+        wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, SELECTOR_PRODUCT_LINK)))
         
         # Extract product URLs
-        product_links = driver.find_elements(By.CSS_SELECTOR, product_link_selector)
+        product_links = driver.find_elements(By.CSS_SELECTOR, SELECTOR_PRODUCT_LINK)
+        product_urls = []
         
         for link in product_links:
             try:
@@ -96,7 +125,7 @@ def extract_product_urls(driver, wait, page_url):
             except Exception:
                 continue
         
-        # Remove duplicates while preserving order (Python 3.7+ dict maintains insertion order)
+        # Remove duplicates while preserving order
         return list(dict.fromkeys(product_urls))
         
     except Exception as e:
@@ -104,7 +133,13 @@ def extract_product_urls(driver, wait, page_url):
         return []
 
 
-def extract_product_urls_from_category(category_url, driver, wait, start_page=1, max_pages=2):
+def extract_product_urls_from_category(
+    category_url: str,
+    driver: WebDriver,
+    wait: WebDriverWait,
+    start_page: int = 1,
+    max_pages: Optional[int] = 2
+) -> List[str]:
     """Extract all product URLs from a category page, handling pagination.
     
     Args:
@@ -112,7 +147,8 @@ def extract_product_urls_from_category(category_url, driver, wait, start_page=1,
         driver: Selenium WebDriver instance
         wait: WebDriverWait instance
         start_page: Starting page number (1-indexed, default: 1)
-        max_pages: Number of pages to scrape starting from start_page (default: 2 for development, None for all pages)
+        max_pages: Number of pages to scrape starting from start_page
+                  (default: 2 for development, None for all pages)
     
     Returns:
         List of all unique product URLs from specified page range
@@ -122,47 +158,36 @@ def extract_product_urls_from_category(category_url, driver, wait, start_page=1,
     try:
         # Load first page to get all page URLs from pagination
         print(f"Loading category page: {category_url}")
-        driver.get(category_url)
-        product_link_selector = f'a[href*="{PRODUCT_URL_PATH}"]'
-        wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, product_link_selector)))
+        if not navigate_to_page(driver, category_url):
+            print("Failed to load category page")
+            return []
+        
+        wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, SELECTOR_PRODUCT_LINK)))
         
         # Get all page URLs from pagination
         page_urls = extract_all_page_urls_from_pagination(driver)
         total_pages = len(page_urls)
         print(f"Found {total_pages} page(s) in pagination")
         
-        # Validate start_page
-        if start_page < 1:
-            start_page = 1
+        # Validate and calculate page range
+        start_page = max(1, start_page)  # Ensure start_page >= 1
         if start_page > total_pages:
             print(f"Warning: start_page ({start_page}) exceeds total pages ({total_pages}). No pages to process.")
             return []
         
-        # Calculate end_page based on start_page + max_pages
-        if max_pages is None:
-            # Scrape all pages from start_page to end
-            end_page = total_pages
-        else:
-            end_page = start_page + max_pages - 1
-            end_page = min(end_page, total_pages)  # Cap at total available pages
-        
-        # Slice page_urls based on start_page and end_page (1-indexed to 0-indexed)
+        end_page = total_pages if max_pages is None else min(start_page + max_pages - 1, total_pages)
         page_urls_to_process = page_urls[start_page - 1:end_page]
+        
         print(f"Processing pages {start_page} to {end_page} ({len(page_urls_to_process)} page(s))")
         
         # Extract product URLs from each page
         for idx, page_url in enumerate(page_urls_to_process, start=start_page):
             print(f"Page {idx}: {page_url}")
             
-            # Extract product URLs from this page (function handles navigation)
             page_product_urls = extract_product_urls(driver, wait, page_url)
-            page_products = len(page_product_urls)
+            all_product_urls.update(page_product_urls)  # Use update() for better performance
             
-            # Add to set to avoid duplicates
-            for url in page_product_urls:
-                all_product_urls.add(url)
-            
-            print(f"  Found {page_products} products (Total: {len(all_product_urls)})")
+            print(f"  Found {len(page_product_urls)} products (Total: {len(all_product_urls)})")
         
         return list(all_product_urls)
         
