@@ -15,19 +15,9 @@ from config import (
 
 def create_driver() -> Tuple[WebDriver, WebDriverWait]:
     """Creates and configures Chrome WebDriver instance."""
-    import os
-    
     options = uc.ChromeOptions()
     options.add_argument('--lang=nl-NL')
-    
-    # Headless mode for Docker/CI environments
-    if os.getenv('DOCKER_ENV') or not os.getenv('DISPLAY'):
-        options.add_argument('--headless')
-        options.add_argument('--no-sandbox')
-        options.add_argument('--disable-dev-shm-usage')
-        options.add_argument('--disable-gpu')
-    else:
-        options.add_argument('--start-maximized')
+    options.add_argument('--start-maximized')
     
     driver = uc.Chrome(options=options, version_main=None)
     driver.set_page_load_timeout(PAGE_LOAD_TIMEOUT)

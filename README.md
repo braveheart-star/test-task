@@ -41,19 +41,6 @@ source venv/bin/activate  # On Linux/Mac
 pip install -r requirements.txt
 ```
 
-### Option 2: Docker Setup
-
-1. Build and run with Docker Compose:
-```bash
-docker-compose up --build
-```
-
-Or using Docker directly:
-```bash
-docker build -t bol-scraper .
-docker run -v $(pwd)/output:/app/output bol-scraper
-```
-
 ## Usage
 
 ### Basic Usage
@@ -120,8 +107,6 @@ scraping-2.0/
 ├── file_handler.py     # Excel file operations
 ├── config.py           # Configuration constants
 ├── requirements.txt    # Python dependencies
-├── Dockerfile          # Docker configuration
-├── docker-compose.yml  # Docker Compose setup
 └── README.md           # This file
 ```
 
@@ -156,10 +141,6 @@ Edit `config.py` to adjust:
 - Some products may not have EAN codes or prices
 - The scraper will retry failed extractions once
 - Empty values are saved as empty strings in Excel
-
-**Docker issues:**
-- Ensure Docker has enough memory (2GB+ recommended)
-- Check that volumes are mounted correctly
 
 ## License
 
