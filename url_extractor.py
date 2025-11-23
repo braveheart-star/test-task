@@ -1,3 +1,4 @@
+import logging
 from typing import List, Optional
 from selenium.webdriver.remote.webdriver import WebDriver
 from selenium.webdriver.common.by import By
@@ -13,6 +14,8 @@ from config import (
     SELECTOR_PRODUCT_LINK
 )
 from browser import navigate_to_page
+
+logger = logging.getLogger('bol_scraper')
 
 
 def extract_all_page_urls_from_pagination(driver: WebDriver) -> List[str]:
@@ -100,26 +103,35 @@ def extract_product_urls_from_category(
     all_product_urls = set()
     
     try:
+        logger.debug(f"Navigating to category: {category_url}")
         if not navigate_to_page(driver, category_url):
+            logger.warning(f"Failed to navigate to category: {category_url}")
             return []
         
         wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, SELECTOR_PRODUCT_LINK)))
         
         page_urls = extract_all_page_urls_from_pagination(driver)
         total_pages = len(page_urls)
+        logger.info(f"Found {total_pages} page(s) in category")
         
         start_page = max(1, start_page)
         if start_page > total_pages:
+            logger.warning(f"start_page ({start_page}) exceeds total pages ({total_pages})")
             return []
         
         end_page = total_pages if max_pages is None else min(start_page + max_pages - 1, total_pages)
         page_urls_to_process = page_urls[start_page - 1:end_page]
+        logger.info(f"Processing pages {start_page} to {end_page} ({len(page_urls_to_process)} page(s))")
         
         for idx, page_url in enumerate(page_urls_to_process, start=start_page):
+            logger.debug(f"Extracting products from page {idx}/{end_page}")
             page_product_urls = extract_product_urls(driver, wait, page_url)
             all_product_urls.update(page_product_urls)
+            logger.debug(f"Found {len(page_product_urls)} products on page {idx} (Total: {len(all_product_urls)})")
         
+        logger.info(f"Total unique product URLs extracted: {len(all_product_urls)}")
         return list(all_product_urls)
         
-    except Exception:
+    except Exception as e:
+        logger.error(f"Error extracting product URLs: {e}", exc_info=True)
         return list(all_product_urls)

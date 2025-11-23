@@ -1,5 +1,7 @@
-from typing import Final
+import os
+from typing import Final, Optional
 
+# Technical constants
 PAGE_LOAD_TIMEOUT: Final[int] = 30
 WEBDRIVER_WAIT_TIMEOUT: Final[int] = 15
 RETRY_ATTEMPTS: Final[int] = 2
@@ -29,6 +31,48 @@ COL_PRODUCT_URL: Final[str] = 'Product URL'
 COL_EAN: Final[str] = 'EAN'
 COL_PRICE: Final[str] = 'Price'
 
+# Environment variable configuration with defaults
+def get_env_int(key: str, default: int) -> int:
+    """Get integer from environment variable with default."""
+    value = os.getenv(key)
+    if value is None:
+        return default
+    try:
+        return int(value)
+    except ValueError:
+        return default
+
+def get_env_str(key: str, default: str) -> str:
+    """Get string from environment variable with default."""
+    return os.getenv(key, default)
+
+def get_env_optional_int(key: str, default: Optional[int]) -> Optional[int]:
+    """Get optional integer from environment variable with default."""
+    value = os.getenv(key)
+    if value is None:
+        return default
+    if value.lower() in ('none', 'null', ''):
+        return None
+    try:
+        return int(value)
+    except ValueError:
+        return default
+
+def get_env_list(key: str, default: list) -> list:
+    """Get list from comma-separated environment variable with default."""
+    value = os.getenv(key)
+    if value is None:
+        return default
+    return [item.strip() for item in value.split(',') if item.strip()]
+
+# Configuration from environment variables
+START_PAGE: int = get_env_int('START_PAGE', 1)
+MAX_PAGES: Optional[int] = get_env_optional_int('MAX_PAGES', 2)
+OUTPUT_PATH: str = get_env_str('OUTPUT_PATH', '/app/bol_products.xlsx')
+LOG_LEVEL: str = get_env_str('LOG_LEVEL', 'INFO')
+CATEGORY_URLS: list = get_env_list('CATEGORY_URLS', [])
+
+# Legacy defaults for backward compatibility
 DEFAULT_OUTPUT_FILE: Final[str] = 'bol_products.xlsx'
 DEFAULT_START_PAGE: Final[int] = 1
 DEFAULT_MAX_PAGES: Final[int] = 2

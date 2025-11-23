@@ -8,6 +8,12 @@ services:
       - .:/app
     environment:
       - DOCKER_ENV=true
+      # Configuration via environment variables
+      - START_PAGE=1
+      - MAX_PAGES=2
+      - OUTPUT_PATH=/app/bol_products.xlsx
+      - LOG_LEVEL=INFO
+      - CATEGORY_URLS=https://www.bol.com/nl/nl/l/analoge-instantcamera-s/20974/,https://www.bol.com/nl/nl/l/vlekkenreinigers-waterniveau-indicator/68305/
     shm_size: '2gb'
     restart: "no"
 

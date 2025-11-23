@@ -1,3 +1,4 @@
+import logging
 from typing import Dict, List, Any, Optional
 from selenium.webdriver.remote.webdriver import WebDriver
 from selenium.webdriver.support.ui import WebDriverWait
@@ -9,20 +10,22 @@ from config import (
     RETRY_DELAY,
     COL_PRODUCT_URL,
     COL_EAN,
-    COL_PRICE,
-    DEFAULT_OUTPUT_FILE,
-    DEFAULT_START_PAGE,
-    DEFAULT_MAX_PAGES
+    COL_PRICE
 )
+
+logger = logging.getLogger('bol_scraper')
 
 
 def scrape_category_products(
     category_url: str,
-    output_file: str = DEFAULT_OUTPUT_FILE,
-    start_page: int = DEFAULT_START_PAGE,
-    max_pages: Optional[int] = DEFAULT_MAX_PAGES
+    output_file: str,
+    start_page: int = 1,
+    max_pages: Optional[int] = 2
 ) -> None:
     """Scrapes products from a category page, extracts EAN and price, saves to Excel."""
+    logger.info(f"Starting scrape for category: {category_url}")
+    logger.info(f"Configuration: start_page={start_page}, max_pages={max_pages}, output_file={output_file}")
+    
     driver, wait = create_driver()
     products_data = []
     
@@ -32,19 +35,23 @@ def scrape_category_products(
         )
         
         if not product_urls:
-            print("No product URLs found. Exiting.")
+            logger.warning("No product URLs found. Exiting.")
             return
+        
+        logger.info(f"Found {len(product_urls)} product URLs to process")
         
         stats = _extract_product_details(driver, wait, product_urls)
         products_data = stats['products_data']
         
         if stats['failed_products']:
+            logger.info(f"Retrying {len(stats['failed_products'])} failed products")
             _retry_failed_products(driver, wait, stats)
         
         save_result_to_excel(products_data, output_file)
+        logger.info(f"Scraping completed. Saved {len(products_data)} products to {output_file}")
         
     except Exception as e:
-        print(f"Error during scraping: {e}")
+        logger.error(f"Error during scraping: {e}", exc_info=True)
     finally:
         try:
             driver.quit()

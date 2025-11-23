@@ -1,3 +1,4 @@
+import logging
 import time
 from typing import Callable, Optional, Tuple, Any
 import undetected_chromedriver as uc
@@ -11,6 +12,8 @@ from config import (
     PAGE_ERROR_WAIT,
     RETRY_ATTEMPTS
 )
+
+logger = logging.getLogger('bol_scraper')
 
 
 def create_driver() -> Tuple[WebDriver, WebDriverWait]:
@@ -43,7 +46,7 @@ def navigate_to_page(driver: WebDriver, page_url: str, delay: float = PAGE_LOAD_
         time.sleep(delay)
         return True
     except Exception as e:
-        print(f"Navigation failed for {page_url}: {e}")
+        logger.warning(f"Navigation failed for {page_url}: {e}")
         time.sleep(PAGE_ERROR_WAIT)
         return False
 
