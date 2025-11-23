@@ -16,6 +16,7 @@ from browser import navigate_to_page
 
 
 def extract_all_page_urls_from_pagination(driver: WebDriver) -> List[str]:
+    """Extracts all page URLs from pagination by finding max page number."""
     page_urls = []
     try:
         current_url = driver.current_url
@@ -60,6 +61,7 @@ def _get_max_page_number(driver: WebDriver) -> int:
 
 
 def extract_product_urls(driver: WebDriver, wait: WebDriverWait, page_url: str) -> List[str]:
+    """Extracts product URLs from a single category page."""
     try:
         if not navigate_to_page(driver, page_url):
             return []
@@ -94,6 +96,7 @@ def extract_product_urls_from_category(
     start_page: int = 1,
     max_pages: Optional[int] = 2
 ) -> List[str]:
+    """Extracts all product URLs from a category page, handling pagination."""
     all_product_urls = set()
     
     try:

@@ -12,6 +12,7 @@ from config import (
 
 
 def save_result_to_excel(products_data: List[Dict[str, Any]], output_file: str = DEFAULT_OUTPUT_FILE) -> None:
+    """Saves products data to Excel file."""
     if not products_data:
         return
     
@@ -20,6 +21,7 @@ def save_result_to_excel(products_data: List[Dict[str, Any]], output_file: str =
 
 
 def update_missing_ean_codes(excel_file: str = DEFAULT_OUTPUT_FILE) -> None:
+    """Reads Excel file, finds URLs with missing EAN codes, and updates them."""
     try:
         df = pd.read_excel(excel_file)
         df[COL_EAN] = df[COL_EAN].astype(str).replace('nan', '').replace('None', '')

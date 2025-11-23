@@ -20,6 +20,7 @@ def scrape_category_products(
     start_page: int = DEFAULT_START_PAGE,
     max_pages: Optional[int] = DEFAULT_MAX_PAGES
 ) -> None:
+    """Scrapes products from a category page, extracts EAN and price, saves to Excel."""
     driver, wait = create_driver()
     products_data = []
     

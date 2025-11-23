@@ -14,6 +14,7 @@ from config import (
 
 
 def create_driver() -> Tuple[WebDriver, WebDriverWait]:
+    """Creates and configures Chrome WebDriver instance."""
     options = uc.ChromeOptions()
     options.add_argument('--lang=nl-NL')
     options.add_argument('--start-maximized')
@@ -26,6 +27,7 @@ def create_driver() -> Tuple[WebDriver, WebDriverWait]:
 
 
 def navigate_to_page(driver: WebDriver, page_url: str, delay: float = PAGE_LOAD_DELAY) -> bool:
+    """Navigates to a page with error handling."""
     try:
         driver.get(page_url)
         time.sleep(delay)
@@ -41,6 +43,7 @@ def retry_extraction(
     wait: WebDriverWait,
     max_attempts: int = RETRY_ATTEMPTS
 ) -> Optional[Any]:
+    """Retries extraction function with delays until success or max attempts."""
     for attempt in range(max_attempts):
         result = extraction_func(driver, wait)
         if result:

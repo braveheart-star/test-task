@@ -21,6 +21,7 @@ from config import (
 
 
 def get_product_price(driver: WebDriver, wait: WebDriverWait) -> Optional[float]:
+    """Extracts product price from the product page."""
     try:
         wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, SELECTOR_PRICE)))
         price_element = driver.find_element(By.CSS_SELECTOR, SELECTOR_PRICE)
@@ -49,6 +50,7 @@ def get_product_price(driver: WebDriver, wait: WebDriverWait) -> Optional[float]
 
 
 def get_product_ean(driver: WebDriver, wait: WebDriverWait) -> Optional[str]:
+    """Extracts EAN code from product specifications section."""
     try:
         wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, SELECTOR_SPEC_SECTION)))
         spec_section = driver.find_element(By.CSS_SELECTOR, SELECTOR_SPEC_SECTION)
