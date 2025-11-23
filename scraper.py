@@ -1,4 +1,6 @@
 from typing import Dict, List, Any, Optional
+from selenium.webdriver.remote.webdriver import WebDriver
+from selenium.webdriver.support.ui import WebDriverWait
 from browser import create_driver, navigate_to_page, retry_extraction
 from extractors import get_product_price, get_product_ean
 from url_extractor import extract_product_urls_from_category
@@ -30,6 +32,7 @@ def scrape_category_products(
         )
         
         if not product_urls:
+            print("No product URLs found. Exiting.")
             return
         
         stats = _extract_product_details(driver, wait, product_urls)
@@ -50,7 +53,7 @@ def scrape_category_products(
 
 
 def _extract_product_details(
-    driver, wait, product_urls: List[str]
+    driver: WebDriver, wait: WebDriverWait, product_urls: List[str]
 ) -> Dict[str, Any]:
     products_data = []
     failed_products = []
@@ -105,7 +108,7 @@ def _extract_product_details(
     }
 
 
-def _retry_failed_products(driver, wait, stats: Dict[str, Any]) -> None:
+def _retry_failed_products(driver: WebDriver, wait: WebDriverWait, stats: Dict[str, Any]) -> None:
     failed_products = stats['failed_products']
     products_dict = stats['products_dict']
     missing_ean_count = stats['missing_ean_count']

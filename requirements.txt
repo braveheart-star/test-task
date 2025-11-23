@@ -1,0 +1,6 @@
+undetected-chromedriver
+setuptools
+pandas
+openpyxl
+selenium
+
