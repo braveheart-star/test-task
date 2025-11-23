@@ -22,13 +22,7 @@ A web scraping tool that extracts product information (URL, EAN code, and price)
 
 ### Option 1: Local Setup
 
-1. Clone the repository:
-```bash
-git clone <repository-url>
-cd scraping-2.0
-```
-
-2. Create and activate virtual environment:
+1. Create and activate virtual environment:
 ```bash
 python -m venv venv
 source venv/Scripts/activate  # On Windows
@@ -63,28 +57,6 @@ Then run:
 python main.py
 ```
 
-### Advanced Usage
-
-```python
-from scraper import scrape_category_products
-
-# Scrape all pages from a category
-scrape_category_products(
-    category_url="https://www.bol.com/nl/nl/l/elektrische-steps/49880/",
-    output_file='products.xlsx',
-    start_page=1,
-    max_pages=None  # None = all pages
-)
-
-# Scrape specific page range
-scrape_category_products(
-    category_url="https://www.bol.com/nl/nl/l/elektrische-steps/49880/",
-    output_file='products.xlsx',
-    start_page=1,
-    max_pages=5  # Only first 5 pages
-)
-```
-
 ## Output
 
 The scraper generates an Excel file (`bol_products.xlsx` by default) with three columns:
@@ -92,8 +64,6 @@ The scraper generates an Excel file (`bol_products.xlsx` by default) with three 
 - **Product URL**: Full URL of the product page
 - **EAN**: EAN code (barcode) of the product
 - **Price**: Current price of the product
-
-**Note:** A sample output file (`sample_output.xlsx`) is included to demonstrate the expected format. Run `python create_sample_output.py` to regenerate it.
 
 ## Project Structure
 
@@ -110,22 +80,9 @@ scraping-2.0/
 └── README.md           # This file
 ```
 
-## Configuration
-
-Edit `config.py` to adjust:
-- Timeouts and delays
-- Retry attempts
-- CSS selectors (if website structure changes)
-
-## Error Handling
-
-- Missing EAN codes: Returns empty string, retries once
-- Missing prices: Returns empty string, retries once
-- Page load failures: Gracefully handles and continues
-- Network issues: Automatic retry with delays
-
 ## Notes
 
+- **Technical Challenge - Anti-Bot Detection**: The most technical challenge was avoiding anti-bot detection. This was solved by using `undetected-chromedriver`, which bypasses common bot detection mechanisms.
 - Uses `undetected-chromedriver` to avoid bot detection
 - Includes retry mechanism for failed extractions
 - Automatically handles pagination
