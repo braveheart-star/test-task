@@ -1,28 +1,20 @@
-"""
-Configuration constants for Bol.com scraper.
-"""
-
 from typing import Final
 
-# Timeout and delay constants
-PAGE_LOAD_TIMEOUT: Final[int] = 30  # seconds
-WEBDRIVER_WAIT_TIMEOUT: Final[int] = 15  # seconds
+PAGE_LOAD_TIMEOUT: Final[int] = 30
+WEBDRIVER_WAIT_TIMEOUT: Final[int] = 15
 RETRY_ATTEMPTS: Final[int] = 2
-PAGE_LOAD_DELAY: Final[float] = 1.0  # seconds
-RETRY_DELAY: Final[float] = 2.0  # seconds
-SHOW_MORE_WAIT: Final[float] = 3.0  # seconds
-SCROLL_WAIT: Final[float] = 0.5  # seconds (wait after scrolling)
-PAGE_ERROR_WAIT: Final[float] = 2.0  # seconds (wait when page load has errors)
+PAGE_LOAD_DELAY: Final[float] = 1.0
+RETRY_DELAY: Final[float] = 2.0
+SHOW_MORE_WAIT: Final[float] = 3.0
+SCROLL_WAIT: Final[float] = 0.5
+PAGE_ERROR_WAIT: Final[float] = 2.0
 
-# URL Constants
 BOL_BASE_URL: Final[str] = 'https://www.bol.com'
 PRODUCT_URL_PATH: Final[str] = '/nl/nl/p/'
 CATEGORY_URL_PATH: Final[str] = '/nl/nl/l/'
 
-# Regex Patterns
-EAN_PATTERN: Final[str] = r'EAN[:\s\-]*(\d{8,14})'  # Pattern to match EAN codes (8-14 digits)
+EAN_PATTERN: Final[str] = r'EAN[:\s\-]*(\d{8,14})'
 
-# CSS Selectors
 SELECTOR_PRICE: Final[str] = 'span[data-test="price"]'
 SELECTOR_PRICE_FRACTION: Final[str] = 'sup[data-test="price-fraction"]'
 SELECTOR_SPEC_SECTION: Final[str] = 'section[data-group-name="ProductSpecification"]'
@@ -33,12 +25,10 @@ SELECTOR_SPEC_VALUE: Final[str] = 'dd.specs__value'
 SELECTOR_PAGINATION: Final[str] = 'div[data-testid="pagination"]'
 SELECTOR_PRODUCT_LINK: Final[str] = 'a[href*="/nl/nl/p/"]'
 
-# Excel Column Names
 COL_PRODUCT_URL: Final[str] = 'Product URL'
 COL_EAN: Final[str] = 'EAN'
 COL_PRICE: Final[str] = 'Price'
 
-# Default Values
 DEFAULT_OUTPUT_FILE: Final[str] = 'bol_products.xlsx'
 DEFAULT_START_PAGE: Final[int] = 1
 DEFAULT_MAX_PAGES: Final[int] = 2
