@@ -126,7 +126,7 @@ def extract_product_urls_from_category(
         for page_url in page_urls_to_process:
             page_product_urls = extract_product_urls(driver, wait, page_url)
             all_product_urls.update(page_product_urls)
-            logger.debug(f"Found {len(page_product_urls)} products on page {idx} (Total: {len(all_product_urls)})")
+            logger.debug(f"Found {len(page_product_urls)} products on page (Total: {len(all_product_urls)})")
         
         logger.info(f"Total unique product URLs extracted: {len(all_product_urls)}")
         return list(all_product_urls)

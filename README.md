@@ -1,173 +1,81 @@
 # Bol.com Product Scraper
 
-A web scraping tool that extracts product information (URL, EAN code, and price) from bol.com category pages and saves the results to an Excel file with automatic filename generation.
+A web scraping tool that extracts product information (URL, EAN code, and price) from bol.com category pages and saves the results to an Excel file.
 
-## Features
+## Docker Configuration
 
-- ✅ Extracts all product URLs from category pages with pagination support
-- ✅ Handles pagination automatically across multiple pages
-- ✅ Extracts EAN codes with multiple fallback methods
-- ✅ Extracts current product prices
-- ✅ Automatic output filename generation (category name + timestamp)
-- ✅ Retry mechanism for failed extractions
-- ✅ Duplicate URL prevention at multiple levels
-- ✅ Stealth features to avoid bot detection (homepage visit, human-like scrolling)
-- ✅ Progress tracking and detailed summary statistics
-- ✅ Graceful error handling with empty value fallbacks
+The scraper supports configuration via environment variables for Docker deployment. However, **scraping cannot be fully implemented in Docker** due to anti-bot detection mechanisms.
 
-## Requirements
+### Environment Variables
 
-- Python 3.11+
-- Chrome browser (for Selenium)
-- Required Python packages (see `requirements.txt`)
+- **START_PAGE**: The first page to scrape (default: `1`)
+- **MAX_PAGES**: Maximum number of pages to scrape per category (default: `2`, use `None` for all pages)
+- **OUTPUT_PATH**: Where the generated Excel file will be written (default: `/app/bol_products.xlsx`)
+- **LOG_LEVEL**: Logging level - `INFO`, `DEBUG`, or `ERROR` (default: `INFO`)
+- **CATEGORY_URLS**: Comma-separated list of category URLs to scrape (default: empty)
 
-## Installation
+### Docker Compose Example
 
-### Option 1: Local Setup
+```yaml
+version: '3.8'
 
-1. Create and activate virtual environment:
-```bash
-python -m venv venv
-source venv/Scripts/activate  # On Windows
-# or
-source venv/bin/activate  # On Linux/Mac
+services:
+  scraper:
+    build: .
+    container_name: bol-scraper
+    volumes:
+      - .:/app
+    environment:
+      - START_PAGE=1
+      - MAX_PAGES=2
+      - OUTPUT_PATH=/app/bol_products.xlsx
+      - LOG_LEVEL=INFO
+      - CATEGORY_URLS=https://www.bol.com/nl/nl/l/analoge-instantcamera-s/20974/,https://www.bol.com/nl/nl/l/vlekkenreinigers-waterniveau-indicator/68305/
+    shm_size: '2gb'
+    restart: "no"
 ```
 
-2. Install dependencies:
-```bash
-pip install -r requirements.txt
-```
+## Why Scraping Cannot Be Implemented in Docker
 
-## Usage
+**The scraper cannot run effectively in Docker due to bol.com's anti-bot detection system.**
 
-### Basic Usage
+When running Chrome in Docker, you typically need to use headless mode (`--headless` flag) because Docker containers don't have a display server. However, **headless browsers are easily detected by modern anti-bot systems** like those used by bol.com.
 
-Edit `main.py` to set your category URL:
+### Detection Mechanisms
 
-```python
-if __name__ == '__main__':
-    category_url = "https://www.bol.com/nl/nl/l/your-category/12345/"
-    output_file = generate_output_filename(category_url)  # Auto-generates: category_name_YYYYMMDD_HHMMSS.xlsx
-    
-    scrape_category_products(
-        category_url,
-        output_file=output_file,
-        start_page=1,
-        max_pages=3  # None = collect all pages, or set a number to limit pages
-    )
-```
+Headless browsers expose several indicators that anti-bot systems use to identify automated browsers:
 
-Then run:
-```bash
-# Set environment variables and run
-export CATEGORY_URLS="https://www.bol.com/nl/nl/l/your-category/12345/"
-export MAX_PAGES=2
-export LOG_LEVEL=INFO
-python main.py
-```
+1. **`navigator.webdriver` property**: Set to `true` in headless mode
+2. **Missing browser plugins and extensions**: Headless browsers lack typical user-installed extensions
+3. **Different user agent patterns**: Headless mode often has different user agent signatures
+4. **Absence of typical browser behaviors**: Missing mouse movements, realistic timing, and interaction patterns
+5. **Canvas fingerprinting differences**: Headless browsers produce different canvas fingerprints
+6. **WebGL vendor/renderer mismatches**: WebGL parameters differ in headless mode
 
-### Parameters
+### The Solution
 
-- `category_url`: The bol.com category page URL
-- `output_file`: Excel file path (auto-generated if using `generate_output_filename()`)
-- `start_page`: First page to scrape (default: 1)
-- `max_pages`: Maximum number of pages to scrape (default: 2, use `None` for all pages)
+The scraper uses `undetected-chromedriver` which bypasses some detection mechanisms, but it **must run in non-headless mode** (with a visible browser window) to effectively avoid detection. This requires:
 
-## Output
+- A display server (X server on Linux, native display on Windows/Mac)
+- Browser window visibility
+- Human-like interaction patterns (scrolling, delays)
 
-The scraper generates an Excel file with automatic naming: `{category_name}_{timestamp}.xlsx`
+### Why Docker Doesn't Work
 
-**Example:** `vlekkenreinigers-waterniveau-indicator_20251124_110313.xlsx`
+Docker containers typically:
+- Don't have a display server
+- Require headless mode (`--headless` flag)
+- Cannot show browser windows
+- Are easily detected by anti-bot systems when using headless mode
 
-The Excel file contains three columns:
+Even with `undetected-chromedriver`, running in headless mode within Docker triggers bol.com's anti-bot detection, causing blocked requests, CAPTCHA challenges, rate limiting, and failed page loads.
 
-- **Product URL**: Full URL of the product page
-- **EAN**: EAN code (barcode) of the product
-- **Price**: Current price of the product
+### Recommended Approach
 
-### Console Output
+**Run the scraper locally** (not in Docker) where:
+- The browser can run in non-headless mode (maximized window)
+- `undetected-chromedriver` can effectively bypass detection
+- Human-like behaviors (scrolling, random delays) work naturally
+- The scraper appears as a regular browser session
 
-During execution, you'll see:
-- Progress indicators: `[1/77] Processing: https://...`
-- Retry notifications for failed products
-- Summary statistics:
-  ```
-  ============================================================
-  Scraping completed!
-  Total products: 77
-  Successful (both EAN & Price): 77
-  Missing EAN: 0
-  Missing Price: 0
-  Complete failures: 1
-  ============================================================
-  ```
-
-## Project Structure
-
-```
-app/
-├── main.py              # Entry point
-├── scraper.py           # Main orchestration logic
-├── browser.py           # Browser setup and navigation
-├── extractors.py       # Product data extraction (EAN, Price)
-├── url_extractor.py    # URL extraction from pages/categories
-├── file_handler.py     # Excel file operations
-├── config.py           # Configuration constants
-├── requirements.txt    # Python dependencies
-└── README.md           # This file
-```
-
-## Technical Details
-
-### Anti-Bot Detection
-
-The most technical challenge was avoiding anti-bot detection. This was solved using multiple strategies:
-
-1. **undetected-chromedriver**: Bypasses common bot detection mechanisms by patching ChromeDriver
-2. **Stealth Initialization**: Visits bol.com homepage first to establish a legitimate session
-3. **Human-like Behavior**: 
-   - Random delays (3-5 seconds for homepage, 5-7 seconds for product pages)
-   - Human-like scrolling behavior
-   - Non-headless mode (maximized window)
-
-
-### EAN Extraction Strategy
-
-The scraper uses a three-tier fallback approach:
-1. **Structured extraction**: Parses HTML structure (dt/dd elements)
-2. **JavaScript extraction**: Uses JavaScript to extract text content
-3. **Regex extraction**: Pattern matching as final fallback
-
-### Duplicate Prevention
-
-- URL deduplication at page level using `dict.fromkeys()`
-- Set-based deduplication across multiple pages
-- Additional duplicate check during product processing
-
-## Troubleshooting
-
-### Chrome Driver Issues
-- Ensure Chrome browser is installed and up to date
-- `undetected-chromedriver` should auto-download compatible driver
-- If issues persist, try updating Chrome browser
-
-### Missing Data
-- Some products may not have EAN codes or prices available on the page
-- The scraper automatically retries failed extractions once
-- Empty values are saved as empty strings in Excel
-- Check the summary statistics to see how many products have missing data
-
-### Timeout Errors
-- If you see "Navigation failed" errors, the page may be loading slowly
-- The scraper will continue processing other products
-- Failed products are retried automatically
-
-### Performance
-- Processing time depends on number of products and page load times
-- Average: ~5-7 seconds per product (includes stealth delays)
-- For 77 products: approximately 6-9 minutes total
-
-## License
-
-MIT
-
+The Docker configuration is provided for reference and environment variable management, but **the actual scraping should be performed in a local environment** where the browser can run in non-headless mode.
