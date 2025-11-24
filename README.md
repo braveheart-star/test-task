@@ -113,6 +113,12 @@ app/
 └── README.md           # This file
 ```
 
+## Docker Implementation
+
+Docker configuration is implemented in the [`dev/docker`](https://github.com/braveheart-star/test-task/tree/dev/docker) branch.
+
+**Note:** While Docker configuration is available, scraping cannot be effectively run in Docker due to bol.com's anti-bot detection. Headless mode (required in Docker) is easily detected, causing blocked requests and CAPTCHA challenges. The scraper must run locally in non-headless mode to avoid detection.
+
 ## Technical Details
 
 ### Anti-Bot Detection
