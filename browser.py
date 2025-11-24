@@ -25,13 +25,12 @@ def create_driver() -> Tuple[WebDriver, WebDriverWait]:
     driver.set_page_load_timeout(PAGE_LOAD_TIMEOUT)
     wait = WebDriverWait(driver, WEBDRIVER_WAIT_TIMEOUT)
     
+    # Stealth: Initialize by visiting bol.com homepage first (anti-bot detection)
     navigate_to_page(driver, BOL_BASE_URL, delay=random.uniform(3, 5))
     
     # Stealth: Human-like scrolling to avoid bot detection
     driver.execute_script("window.scrollTo(0, document.body.scrollHeight/3);")
     time.sleep(random.uniform(1, 2))
-    
-    # Stealth: Initialize by visiting bol.com homepage first (anti-bot detection)
     
     return driver, wait
 

@@ -1,4 +1,5 @@
 from typing import List, Dict, Any
+import os
 import pandas as pd
 
 from config import DEFAULT_OUTPUT_FILE
@@ -6,7 +7,6 @@ from config import DEFAULT_OUTPUT_FILE
 
 def save_result_to_excel(products_data: List[Dict[str, Any]], output_file: str = DEFAULT_OUTPUT_FILE) -> None:
     """Saves products data to Excel file."""
-    import os
     
     if not products_data:
         return
@@ -17,3 +17,4 @@ def save_result_to_excel(products_data: List[Dict[str, Any]], output_file: str =
     
     df = pd.DataFrame(products_data)
     df.to_excel(output_file, index=False, engine='openpyxl')
+    print(f"Results saved to: {output_file}")

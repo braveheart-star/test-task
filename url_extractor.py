@@ -115,7 +115,7 @@ def extract_product_urls_from_category(
         end_page = total_pages if max_pages is None else min(start_page + max_pages - 1, total_pages)
         page_urls_to_process = page_urls[start_page - 1:end_page]
         
-        for idx, page_url in enumerate(page_urls_to_process, start=start_page):
+        for page_url in page_urls_to_process:
             page_product_urls = extract_product_urls(driver, wait, page_url)
             all_product_urls.update(page_product_urls)
         

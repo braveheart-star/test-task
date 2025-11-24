@@ -2,6 +2,7 @@ import re
 import time
 from typing import Optional
 from selenium.webdriver.remote.webdriver import WebDriver
+from selenium.webdriver.remote.webelement import WebElement
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
@@ -68,7 +69,7 @@ def get_product_ean(driver: WebDriver, wait: WebDriverWait) -> Optional[str]:
         return None
 
 
-def _scroll_to_element(driver: WebDriver, element) -> None:
+def _scroll_to_element(driver: WebDriver, element: WebElement) -> None:
     driver.execute_script(
         "arguments[0].scrollIntoView({behavior: 'smooth', block: 'center'});",
         element
@@ -76,7 +77,7 @@ def _scroll_to_element(driver: WebDriver, element) -> None:
     time.sleep(SCROLL_WAIT)
 
 
-def _try_show_more_and_extract(driver: WebDriver, spec_section) -> Optional[str]:
+def _try_show_more_and_extract(driver: WebDriver, spec_section: WebElement) -> Optional[str]:
     try:
         show_more_button = spec_section.find_element(By.CSS_SELECTOR, SELECTOR_SHOW_MORE)
         _scroll_to_element(driver, show_more_button)
@@ -90,7 +91,7 @@ def _try_show_more_and_extract(driver: WebDriver, spec_section) -> Optional[str]
         return None
 
 
-def _extract_ean_from_specs(driver: WebDriver, spec_section) -> Optional[str]:
+def _extract_ean_from_specs(driver: WebDriver, spec_section: WebElement) -> Optional[str]:
     ean = _extract_ean_structured(driver, spec_section)
     if ean:
         return ean
@@ -102,7 +103,7 @@ def _extract_ean_from_specs(driver: WebDriver, spec_section) -> Optional[str]:
     return _extract_ean_regex(driver, spec_section)
 
 
-def _extract_ean_structured(driver: WebDriver, spec_section) -> Optional[str]:
+def _extract_ean_structured(driver: WebDriver, spec_section: WebElement) -> Optional[str]:
     try:
         spec_rows = spec_section.find_elements(By.CSS_SELECTOR, SELECTOR_SPEC_ROW)
         for row in spec_rows:
@@ -121,7 +122,7 @@ def _extract_ean_structured(driver: WebDriver, spec_section) -> Optional[str]:
     return None
 
 
-def _extract_ean_javascript(driver: WebDriver, spec_section) -> Optional[str]:
+def _extract_ean_javascript(driver: WebDriver, spec_section: WebElement) -> Optional[str]:
     try:
         spec_rows = spec_section.find_elements(By.CSS_SELECTOR, SELECTOR_SPEC_ROW)
         for row in spec_rows:
@@ -146,7 +147,7 @@ def _extract_ean_javascript(driver: WebDriver, spec_section) -> Optional[str]:
     return None
 
 
-def _extract_ean_regex(driver: WebDriver, spec_section) -> Optional[str]:
+def _extract_ean_regex(driver: WebDriver, spec_section: WebElement) -> Optional[str]:
     try:
         spec_section_text = driver.execute_script(
             "return arguments[0].textContent || arguments[0].innerText || '';",

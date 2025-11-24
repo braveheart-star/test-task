@@ -35,13 +35,29 @@ def scrape_category_products(
             print("No product URLs found. Exiting.")
             return
         
+        print(f"Found {len(product_urls)} unique product URLs. Starting extraction...")
+        
         stats = _extract_product_details(driver, wait, product_urls)
         products_data = stats['products_data']
         
         if stats['failed_products']:
+            print(f"Retrying {len(stats['failed_products'])} failed products...")
             _retry_failed_products(driver, wait, stats)
         
         save_result_to_excel(products_data, output_file)
+        
+        # Print summary
+        total = len(products_data)
+        # Count successful products (those with both EAN and price)
+        successful = sum(1 for p in products_data if p[COL_EAN] and p[COL_PRICE])
+        print(f"\n{'='*60}")
+        print(f"Scraping completed!")
+        print(f"Total products: {total}")
+        print(f"Successful (both EAN & Price): {successful}")
+        print(f"Missing EAN: {stats['missing_ean_count']}")
+        print(f"Missing Price: {stats['missing_price_count']}")
+        print(f"Complete failures: {stats['error_count']}")
+        print(f"{'='*60}")
         
     except Exception as e:
         print(f"Error during scraping: {e}")
@@ -58,11 +74,20 @@ def _extract_product_details(
     products_data = []
     failed_products = []
     products_dict = {}
+    processed_urls = set()  # Track processed URLs to prevent duplicates
     missing_ean_count = 0
     missing_price_count = 0
     error_count = 0
     
-    for product_url in product_urls:
+    total_urls = len(product_urls)
+    for idx, product_url in enumerate(product_urls, 1):
+        # Skip if already processed (duplicate prevention)
+        if product_url in processed_urls:
+            continue
+        processed_urls.add(product_url)
+        
+        print(f"[{idx}/{total_urls}] Processing: {product_url[:80]}...")
+        
         try:
             navigate_to_page(driver, product_url)
             

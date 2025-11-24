@@ -29,12 +29,12 @@ def generate_output_filename(category_url: str) -> str:
 if __name__ == '__main__':
     # Scrapes product URLs from a category page, extracts EAN and price for each product,
     # and saves the results to an Excel file
-    category_url = "https://www.bol.com/nl/nl/l/analoge-instantcamera-s/20974/"
+    category_url = "https://www.bol.com/nl/nl/l/vlekkenreinigers-waterniveau-indicator/68305/"
     output_file = generate_output_filename(category_url)
     
     scrape_category_products(
         category_url,
         output_file=output_file,
         start_page=1,
-        max_pages=2  # None = collect all pages, or set to a number to limit pages
+        max_pages=3  # None = collect all pages, or set to a number to limit pages
     )

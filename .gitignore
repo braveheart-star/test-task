@@ -33,17 +33,6 @@ venv.bak/
 *.swp
 *.swo
 *~
-
-# OS
-.DS_Store
-Thumbs.db
-
-# Project specific
-*.xlsx
-sample_output.xlsx
-bol_products.xlsx
-output/
-
 # Logs
 *.log
 
