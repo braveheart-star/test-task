@@ -1,5 +1,6 @@
 import logging
 import time
+import random
 from typing import Callable, Optional, Tuple, Any
 import undetected_chromedriver as uc
 from selenium.webdriver.remote.webdriver import WebDriver
@@ -10,7 +11,8 @@ from config import (
     WEBDRIVER_WAIT_TIMEOUT,
     PAGE_LOAD_DELAY,
     PAGE_ERROR_WAIT,
-    RETRY_ATTEMPTS
+    RETRY_ATTEMPTS,
+    BOL_BASE_URL
 )
 
 logger = logging.getLogger('bol_scraper')
@@ -18,23 +20,20 @@ logger = logging.getLogger('bol_scraper')
 
 def create_driver() -> Tuple[WebDriver, WebDriverWait]:
     """Creates and configures Chrome WebDriver instance."""
-    import os
-    
     options = uc.ChromeOptions()
     options.add_argument('--lang=nl-NL')
-    
-    # Headless mode for Docker/CI environments
-    if os.getenv('DOCKER_ENV') or not os.getenv('DISPLAY'):
-        options.add_argument('--headless')
-        options.add_argument('--no-sandbox')
-        options.add_argument('--disable-dev-shm-usage')
-        options.add_argument('--disable-gpu')
-    else:
-        options.add_argument('--start-maximized')
+    options.add_argument('--start-maximized')
     
     driver = uc.Chrome(options=options, version_main=None)
     driver.set_page_load_timeout(PAGE_LOAD_TIMEOUT)
     wait = WebDriverWait(driver, WEBDRIVER_WAIT_TIMEOUT)
+    
+    # Stealth: Initialize by visiting bol.com homepage first (anti-bot detection)
+    navigate_to_page(driver, BOL_BASE_URL, delay=random.uniform(3, 5))
+    
+    # Stealth: Human-like scrolling to avoid bot detection
+    driver.execute_script("window.scrollTo(0, document.body.scrollHeight/3);")
+    time.sleep(random.uniform(1, 2))
     
     return driver, wait
 

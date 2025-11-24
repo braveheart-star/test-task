@@ -2,55 +2,40 @@
 Main entry point for Bol.com Product Scraper.
 """
 
-from logger_config import setup_logging
+import re
+from datetime import datetime
 from scraper import scrape_category_products
 from config import START_PAGE, MAX_PAGES, OUTPUT_PATH, CATEGORY_URLS
 
 
-if __name__ == '__main__':
-    logger = setup_logging()
-    
-    logger.info("=" * 60)
-    logger.info("Bol.com Product Scraper - Starting")
-    logger.info("=" * 60)
-    logger.info(f"Configuration:")
-    logger.info(f"  START_PAGE: {START_PAGE}")
-    logger.info(f"  MAX_PAGES: {MAX_PAGES}")
-    logger.info(f"  OUTPUT_PATH: {OUTPUT_PATH}")
-    logger.info(f"  CATEGORY_URLS: {CATEGORY_URLS if CATEGORY_URLS else 'Not set (using default)'}")
-    logger.info("=" * 60)
-    
-    # Get category URLs from environment or use default
-    if CATEGORY_URLS:
-        category_urls = CATEGORY_URLS
+def generate_output_filename(category_url: str) -> str:
+    """Generates output filename with category name and timestamp."""
+    # Extract category name from URL
+    # Example: https://www.bol.com/nl/nl/l/analoge-instantcamera-s/20974/
+    # Result: analoge-instantcamera-s
+    match = re.search(r'/l/([^/]+)/\d+/', category_url)
+    if match:
+        category_name = match.group(1)
     else:
-        # Default test URLs
-        category_urls = [
-            "https://www.bol.com/nl/nl/l/analoge-instantcamera-s/20974/",
-            "https://www.bol.com/nl/nl/l/vlekkenreinigers-waterniveau-indicator/68305/"
-        ]
-        logger.info("Using default test category URLs")
+        category_name = "products"
     
-    # Process each category
-    for idx, category_url in enumerate(category_urls, 1):
-        logger.info(f"\nProcessing category {idx}/{len(category_urls)}: {category_url}")
-        
-        # Generate output filename for each category if multiple categories
-        if len(category_urls) > 1:
-            import os
-            base_name = os.path.splitext(OUTPUT_PATH)[0]
-            ext = os.path.splitext(OUTPUT_PATH)[1] or '.xlsx'
-            output_file = f"{base_name}_category_{idx}{ext}"
-        else:
-            output_file = OUTPUT_PATH
-        
-        scrape_category_products(
-            category_url,
-            output_file=output_file,
-            start_page=START_PAGE,
-            max_pages=MAX_PAGES
-        )
+    # Generate timestamp
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     
-    logger.info("\n" + "=" * 60)
-    logger.info("All categories processed. Scraping completed.")
-    logger.info("=" * 60)
+    # Create filename: category_name_timestamp.xlsx
+    filename = f"{category_name}_{timestamp}.xlsx"
+    return filename
+
+
+if __name__ == '__main__':
+    # Scrapes product URLs from a category page, extracts EAN and price for each product,
+    # and saves the results to an Excel file
+    category_url = "https://www.bol.com/nl/nl/l/vlekkenreinigers-waterniveau-indicator/68305/"
+    output_file = generate_output_filename(category_url)
+    
+    scrape_category_products(
+        category_url,
+        output_file=output_file,
+        start_page=1,
+        max_pages=3  # None = collect all pages, or set to a number to limit pages
+    )

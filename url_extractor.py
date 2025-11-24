@@ -123,8 +123,7 @@ def extract_product_urls_from_category(
         page_urls_to_process = page_urls[start_page - 1:end_page]
         logger.info(f"Processing pages {start_page} to {end_page} ({len(page_urls_to_process)} page(s))")
         
-        for idx, page_url in enumerate(page_urls_to_process, start=start_page):
-            logger.debug(f"Extracting products from page {idx}/{end_page}")
+        for page_url in page_urls_to_process:
             page_product_urls = extract_product_urls(driver, wait, page_url)
             all_product_urls.update(page_product_urls)
             logger.debug(f"Found {len(page_product_urls)} products on page {idx} (Total: {len(all_product_urls)})")

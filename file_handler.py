@@ -1,5 +1,6 @@
 import logging
 from typing import List, Dict, Any
+import os
 import pandas as pd
 
 from config import DEFAULT_OUTPUT_FILE
@@ -9,7 +10,6 @@ logger = logging.getLogger('bol_scraper')
 
 def save_result_to_excel(products_data: List[Dict[str, Any]], output_file: str = DEFAULT_OUTPUT_FILE) -> None:
     """Saves products data to Excel file."""
-    import os
     
     if not products_data:
         logger.warning("No products data to save")
@@ -22,4 +22,4 @@ def save_result_to_excel(products_data: List[Dict[str, Any]], output_file: str =
     
     df = pd.DataFrame(products_data)
     df.to_excel(output_file, index=False, engine='openpyxl')
-    logger.info(f"Saved {len(products_data)} products to {output_file}")
+    print(f"Results saved to: {output_file}")
